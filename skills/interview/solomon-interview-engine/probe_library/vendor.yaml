@@ -1,0 +1,24 @@
+domain: vendor
+version: 0.1.0
+priority: 6
+
+keywords:
+  payment-terms:
+    - priority: 1
+      template: "{phrase}. When have you renegotiated mid-contract?"
+
+  switching:
+    - priority: 1
+      template: "{phrase}. Last vendor swap — what tipped you?"
+
+  exclusivity:
+    - priority: 1
+      template: "{phrase}. Have you ever been the exclusive customer of a vendor? How did it end?"
+
+  late:
+    - priority: 1
+      template: "{phrase}. What's your tolerance for late delivery — and when does it flip?"
+
+fallbacks:
+  - "Tell me about the last vendor relationship that ended."
+  - "What's a vendor rule you've made up after being burned?"

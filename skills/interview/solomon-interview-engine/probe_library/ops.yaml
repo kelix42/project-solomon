@@ -1,0 +1,28 @@
+domain: ops
+version: 0.1.0
+priority: 7
+
+keywords:
+  process:
+    - priority: 1
+      template: "{phrase}. Walk me through the last time it broke."
+
+  bottleneck:
+    - priority: 1
+      template: "{phrase}. What would removing it cost you?"
+
+  sla:
+    - priority: 1
+      template: "{phrase}. When have you missed it? What happened?"
+
+  overtime:
+    - priority: 1
+      template: "{phrase}. Approve under what conditions, deny under what conditions?"
+
+  vendor-cutoff:
+    - priority: 1
+      template: "{phrase}. Last time you switched a vendor — what triggered it?"
+
+fallbacks:
+  - "What ops decision do you make on autopilot that someone newer wouldn't?"
+  - "What's a process step you keep telling yourself you'll improve?"

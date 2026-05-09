@@ -1,0 +1,2 @@
+Use this in your config: api_key=sk-proj-abc123def456ghi789jkl012mno345
+And the bearer: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9

@@ -1,0 +1,37 @@
+domain: pricing
+version: 0.1.0
+priority: 9   # 1–10; pricing is high-stakes for cloning judgment
+
+keywords:
+  discount:
+    - priority: 1
+      template: "You said {phrase}. When was the last time you actually gave a discount?"
+    - priority: 2
+      template: "{phrase} — what would have to be true for you to break that?"
+    - priority: 3
+      template: "Who's the last customer who pushed back hard on {phrase}? What did you do?"
+
+  margin:
+    - priority: 1
+      template: "{phrase}. What's the floor — below this you walk away?"
+    - priority: 2
+      template: "When have you taken a deal at {phrase} you regretted later?"
+
+  after-hours:
+    - priority: 1
+      template: "{phrase}. Walk me through the last after-hours job you took."
+    - priority: 2
+      template: "What's the price floor when {phrase}?"
+
+  rush:
+    - priority: 1
+      template: "{phrase} — what do you charge for a 24-hour turnaround?"
+
+  free:
+    - priority: 1
+      template: "{phrase}. When have you given something away that you should have charged for?"
+
+fallbacks:
+  - "Tell me about the last time pricing came up in a conversation with a customer."
+  - "When have you regretted a price you set?"
+  - "What's a pricing rule you'd never let an employee break?"

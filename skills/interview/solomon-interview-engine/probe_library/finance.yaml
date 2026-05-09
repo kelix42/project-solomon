@@ -1,0 +1,28 @@
+domain: finance
+version: 0.1.0
+priority: 9
+
+keywords:
+  cash:
+    - priority: 1
+      template: "{phrase}. Lowest you've ever let it run? What triggered the recovery?"
+
+  debt:
+    - priority: 1
+      template: "{phrase}. When was debt the right move? When was it wrong?"
+
+  reinvest:
+    - priority: 1
+      template: "{phrase}. Last big reinvestment decision — how did you size it?"
+
+  margin:
+    - priority: 1
+      template: "{phrase}. When's a thin-margin deal still worth taking?"
+
+  collections:
+    - priority: 1
+      template: "{phrase}. Last unpaid invoice — how long until you escalate?"
+
+fallbacks:
+  - "Tell me about the last finance decision that surprised you in hindsight."
+  - "What's a money rule you'd want carved in stone?"

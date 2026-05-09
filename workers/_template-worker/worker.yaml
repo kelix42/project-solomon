@@ -1,0 +1,7 @@
+name: _template-worker
+version: 0.1.0
+description: Copy this folder to make a long-lived background service. Separate process, supervised by launchd/systemd.
+requires_env: []
+requires_python: []
+supervisor: both           # launchd | systemd | both
+restart: always

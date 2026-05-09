@@ -1,0 +1,7 @@
+name: plaud-ingest
+version: 0.1.0
+description: IMAP IDLE + 60s backup poller for Plaud transcript emails. Saves attachments to corpus/inbox/messages/.
+requires_env: [PLAUD_IMAP_HOST, PLAUD_IMAP_USER, PLAUD_IMAP_PASS, PLAUD_SENDER]
+requires_python: [imapclient]
+supervisor: both
+restart: always

@@ -1,0 +1,7 @@
+name: google-workspace
+version: 0.1.0
+description: Gmail + Calendar + Drive (Docs/Sheets) via Google MCP. Owner sign-off needed before implementation per §2.4.5.
+requires_env: [GOOGLE_MCP_SERVER_URL]
+requires_python: []
+default_enabled: false   # awaits spec
+hooks: []

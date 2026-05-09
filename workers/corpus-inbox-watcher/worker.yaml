@@ -1,0 +1,7 @@
+name: corpus-inbox-watcher
+version: 0.1.0
+description: watchdog-based recursive file watcher on corpus/inbox/. Auto-triggers solomon-corpus-ingest with debounce + file-stable check.
+requires_env: []
+requires_python: [watchdog]
+supervisor: both
+restart: always

@@ -1,0 +1,7 @@
+name: whoop-bridge
+version: 0.1.0
+description: Whoop biometrics polling for the owner-state gate (Stage 9). Owner sign-off needed before implementation per §2.4.5.
+requires_env: [WHOOP_CLIENT_ID, WHOOP_CLIENT_SECRET]
+requires_python: []
+default_enabled: false
+hooks: []

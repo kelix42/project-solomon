@@ -1,0 +1,15 @@
+[Unit]
+Description=Solomon — Hermes gateway daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env hermes gateway start
+Restart=always
+RestartSec=5
+StandardOutput=append:%h/.local/state/solomon/hermes-gateway.out.log
+StandardError=append:%h/.local/state/solomon/hermes-gateway.err.log
+
+[Install]
+WantedBy=default.target

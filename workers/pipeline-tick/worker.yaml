@@ -1,0 +1,7 @@
+name: pipeline-tick
+version: 0.1.0
+description: Every 60s, scan db.events WHERE status=pending and spawn Hermes agent sessions per pending event (max 5 in-flight). Implements the §2.2.5 pipeline trigger.
+requires_env: []
+requires_python: []
+supervisor: both
+restart: always

@@ -1,0 +1,17 @@
+[Unit]
+Description=Solomon — worker __SLUG__
+After=solomon-hermes-gateway.service
+Wants=solomon-hermes-gateway.service
+
+[Service]
+Type=simple
+WorkingDirectory=__SOLOMON_ROOT__
+Environment="PYTHONPATH=__SOLOMON_ROOT__"
+ExecStart=__PYTHON__ -m solomon.workers.__MODULE__
+Restart=always
+RestartSec=5
+StandardOutput=append:%h/.local/state/solomon/__SLUG__.out.log
+StandardError=append:%h/.local/state/solomon/__SLUG__.err.log
+
+[Install]
+WantedBy=default.target

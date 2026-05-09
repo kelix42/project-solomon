@@ -1,0 +1,7 @@
+name: pinecone-bridge
+version: 0.1.0
+description: Exposes Pinecone search + upsert as tools the agent can call. Required for the 5-lane retrieval Lane 1.
+requires_env: [PINECONE_API_KEY, EMBEDDING_DIM]
+requires_python: [pinecone, openai]
+default_enabled: true
+hooks: []

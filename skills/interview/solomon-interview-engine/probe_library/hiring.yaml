@@ -1,0 +1,30 @@
+domain: hiring
+version: 0.1.0
+priority: 8
+
+keywords:
+  fire:
+    - priority: 1
+      template: "{phrase}. Who's the last person you fired? What was the trigger?"
+
+  hire:
+    - priority: 1
+      template: "{phrase}. Who's the last person you hired? What made them obviously right?"
+    - priority: 2
+      template: "{phrase} — what's a non-negotiable on day one?"
+
+  red-flag:
+    - priority: 1
+      template: "{phrase}. Last time you saw it, did you walk away or talk yourself out of it?"
+
+  experience:
+    - priority: 1
+      template: "{phrase}. Have you ever taken someone with less and been right?"
+
+  culture:
+    - priority: 1
+      template: "{phrase}. Concrete example — what does someone do that breaks it?"
+
+fallbacks:
+  - "Tell me about the last hire that surprised you (good or bad)."
+  - "What's a hiring rule you've broken and regretted?"

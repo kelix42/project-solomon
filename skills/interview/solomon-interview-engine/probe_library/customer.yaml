@@ -1,0 +1,30 @@
+domain: customer
+version: 0.1.0
+priority: 9
+
+keywords:
+  refund:
+    - priority: 1
+      template: "{phrase}. Walk me through the last refund. Did you give it?"
+    - priority: 2
+      template: "{phrase} — when do you say no?"
+
+  complaint:
+    - priority: 1
+      template: "{phrase}. Latest one — how did you handle it?"
+
+  fire-customer:
+    - priority: 1
+      template: "{phrase}. Last customer you fired — what was the trigger?"
+
+  loyalty:
+    - priority: 1
+      template: "{phrase}. What's the longest customer you've kept? Why?"
+
+  upsell:
+    - priority: 1
+      template: "{phrase}. When does upselling cross a line for you?"
+
+fallbacks:
+  - "Tell me about the last customer who pushed you to break a rule."
+  - "What's a customer-handling rule you'd never delegate?"

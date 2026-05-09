@@ -1,0 +1,7 @@
+name: workflow-bridge
+version: 0.1.0
+description: n8n / make.com webhook trigger. Owner sign-off needed before implementation per §2.4.5.
+requires_env: [WORKFLOW_WEBHOOK_URL]
+requires_python: []
+default_enabled: false
+hooks: []

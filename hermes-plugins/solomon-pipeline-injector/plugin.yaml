@@ -1,0 +1,7 @@
+name: solomon-pipeline-injector
+version: 0.1.0
+description: pre_llm_call hook that classifies inbound Telegram messages and writes db.events rows for the §2.2.5 pipeline.
+requires_env: []
+requires_python: []
+default_enabled: true
+hooks: [pre_llm_call]

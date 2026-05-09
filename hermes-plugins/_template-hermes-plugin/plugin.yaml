@@ -1,0 +1,7 @@
+name: _template-hermes-plugin
+version: 0.1.0
+description: Copy this folder to make a new Hermes plugin. Implements only the verified register(ctx) API surface (§2.4.6).
+requires_env: []
+requires_python: []
+default_enabled: false   # template; not loaded
+hooks: []
