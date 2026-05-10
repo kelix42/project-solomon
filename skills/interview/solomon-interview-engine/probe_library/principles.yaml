@@ -1,0 +1,192 @@
+# principles.yaml. Probe library for Onboarding Session 03 (Principles).
+# Schema per probe_library/README.md plus the same two forward-compatible
+# additions (probe_style and required_fields) introduced for Session 0.
+# Existing readers ignore unknown top-level keys.
+#
+# Lower priority number wins. Slot {phrase} is replaced verbatim with the
+# owner's last phrase. See probe_style for how follow-ups are written.
+#
+# Semver bump rules (mirror of README.md):
+#   patch (0.1.0 to 0.1.1) for new probe templates under existing keywords.
+#   minor (0.1.0 to 0.2.0) for new keywords or new required_fields entries.
+#   major (0.1.0 to 1.0.0) for breaking schema changes (field rename, removal).
+
+domain: principles
+version: 0.1.0
+priority: 9   # 1 to 10. Principles are the rules of thumb Solomon will reuse,
+              # so they rank high for cloning judgment.
+
+probe_style: |
+  Solomon is a structured reflective listener. The technique borrows from
+  Rogerian listening and motivational interviewing, not from 1966 ELIZA's
+  canned response tables. The owner's exact phrasing is the raw material.
+  Solomon's job: make the owner feel heard enough to keep talking, while
+  quietly capturing rules and vocabulary.
+
+  Seven rules:
+
+  1. Use the owner's exact words. Verbatim phrasing must appear in most
+     follow-ups. The phrasing IS the data; paraphrasing destroys it. The
+     {phrase} substitution must produce sentences where the phrase reads
+     naturally, not bolted on.
+
+  2. Do not editorialize. Avoid "is real exposure", "is a real spread",
+     "tells me there's a number", "that's interesting". Reflect, do not
+     interpret. The owner's frame stands.
+
+  3. The follow-up must build on the echoed phrase. If the new question
+     is not about the echoed phrase, do not echo at all. Just ask the new
+     question. No fake bridges.
+
+  4. Drop filler. Do not start with "Got it", "Right", "OK", "Interesting",
+     "I see", or "That's a good point". Do not use "Tell me more" or
+     "Go on". When you need a connective, leave it out and start with
+     the echo.
+
+  5. Short is usually better. Echo plus one direct question. No setup,
+     no preface, no warm-up.
+
+  6. Follow emotional or evaluative content. When the owner says
+     something with feeling or judgment ("that would hurt", "I'm not
+     happy about it", "too much liability"), the next question is about
+     that, not a pivot away from it.
+
+  7. When pivoting to a new topic, just pivot. Do not invent a verbatim
+     phrase to echo just to soften the transition. Ask the new question
+     plainly. Required-field prompts in this file are pivots and are
+     written that way.
+
+  Continue prompts (use sparingly): "Say more about that.", "Then what?",
+  "What happened next?".
+
+required_fields:
+  - id: principle_about_pricing
+    prompt: "What is the rule of thumb that governs how you set prices?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:principle_about_pricing'"
+    follow_up_keywords: ["pricing-rule", "discount"]
+
+  - id: principle_about_hiring_or_firing
+    prompt: "How do you decide whether to bring someone on or let them go?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:principle_about_hiring_or_firing'"
+    follow_up_keywords: ["hire", "fire"]
+
+  - id: principle_about_customer_conflict
+    prompt: "When a customer pushes back hard or files a complaint, what is your default move?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:principle_about_customer_conflict'"
+    follow_up_keywords: ["conflict", "complaint"]
+
+  - id: principle_about_money
+    prompt: "On cash, debt, and reinvestment: what is your standing posture?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:principle_about_money'"
+    follow_up_keywords: ["money-rule", "reinvest"]
+
+  - id: principle_about_quality_vs_speed
+    prompt: "When quality and speed conflict, which one bends?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:principle_about_quality_vs_speed'"
+    follow_up_keywords: ["quality-speed", "tradeoff"]
+
+  - id: principle_about_saying_no
+    prompt: "When and how do you say no to work, partners, or asks?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:principle_about_saying_no'"
+    follow_up_keywords: ["say-no", "decline"]
+
+  - id: principle_about_growth
+    prompt: "How do you decide when to push for growth versus when to hold?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:principle_about_growth'"
+    follow_up_keywords: ["growth-rule", "hold"]
+
+# 14 keyword clusters covering: pricing, hiring/firing, customer conflict,
+# money, quality vs speed, saying no, growth, plus the depth pairs each
+# required field uses for its one allowed follow-up.
+keywords:
+  pricing-rule:
+    - priority: 1
+      template: "{phrase}. Walk me through how you set the last price."
+    - priority: 2
+      template: "{phrase}. Where is the line below which you would not go?"
+
+  discount:
+    - priority: 1
+      template: "{phrase}. The last discount you gave: was it a mistake?"
+    - priority: 2
+      template: "{phrase}. What would have to be true for you to break that rule?"
+
+  hire:
+    - priority: 1
+      template: "{phrase}. The last hire who worked out: what made them obvious?"
+    - priority: 2
+      template: "{phrase}. The last hire who did not work out: what did you miss?"
+
+  fire:
+    - priority: 1
+      template: "{phrase}. The last person you let go: what was the trigger?"
+    - priority: 2
+      template: "{phrase}. The line where firing becomes obvious to you?"
+
+  conflict:
+    - priority: 1
+      template: "{phrase}. The last real disagreement with a partner or vendor: how did it end?"
+    - priority: 2
+      template: "{phrase}. When do you bring it up early, and when do you let it ride?"
+
+  complaint:
+    - priority: 1
+      template: "{phrase}. The last customer complaint that stuck with you: what about it?"
+    - priority: 2
+      template: "{phrase}. When do you bend, and when do you not?"
+
+  money-rule:
+    - priority: 1
+      template: "{phrase}. The last time you broke that rule: what happened?"
+    - priority: 2
+      template: "{phrase}. The cushion below which you start to feel unsafe: how big is it?"
+
+  reinvest:
+    - priority: 1
+      template: "{phrase}. The last big reinvestment decision: how did you size it?"
+    - priority: 2
+      template: "{phrase}. The reinvestment you regret making: what did it teach you?"
+
+  quality-speed:
+    - priority: 1
+      template: "{phrase}. The last time speed cost you on quality: what was the bill?"
+    - priority: 2
+      template: "{phrase}. The last time slowing down cost you a deal?"
+
+  tradeoff:
+    - priority: 1
+      template: "{phrase}. When the two are in tension, which one usually wins for you?"
+
+  say-no:
+    - priority: 1
+      template: "{phrase}. The last good no: what made it easy?"
+    - priority: 2
+      template: "{phrase}. The last no you regretted: what changed your mind?"
+
+  decline:
+    - priority: 1
+      template: "{phrase}. How do you tell someone no without burning the bridge?"
+
+  growth-rule:
+    - priority: 1
+      template: "{phrase}. The last time you held back when you could have grown: what was the reason?"
+    - priority: 2
+      template: "{phrase}. The signal that tells you it is time to push?"
+
+  hold:
+    - priority: 1
+      template: "{phrase}. The condition that keeps you from expanding right now: what would have to change?"
+
+fallbacks:
+  - "What is a rule of thumb you would write on a wall for a new owner?"
+  - "Tell me about a principle you learned from a mistake."
+  - "What is something you do almost reflexively that took years to figure out?"
+  - "Where does your default-yes vs default-no break down?"
+  - "What is a principle you suspect is wrong but still follow?"

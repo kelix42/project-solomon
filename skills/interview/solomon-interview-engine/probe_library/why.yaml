@@ -1,0 +1,181 @@
+# why.yaml. Probe library for Onboarding Session 02 (Why).
+# Schema per probe_library/README.md plus the same two forward-compatible
+# additions (probe_style and required_fields) introduced for Session 0.
+# Existing readers ignore unknown top-level keys.
+#
+# Lower priority number wins. Slot {phrase} is replaced verbatim with the
+# owner's last phrase. See probe_style for how follow-ups are written.
+#
+# Semver bump rules (mirror of README.md):
+#   patch (0.1.0 to 0.1.1) for new probe templates under existing keywords.
+#   minor (0.1.0 to 0.2.0) for new keywords or new required_fields entries.
+#   major (0.1.0 to 1.0.0) for breaking schema changes (field rename, removal).
+
+domain: why
+version: 0.1.0
+priority: 9   # 1 to 10. Why drives every prioritization, so it ranks high
+              # for cloning judgment.
+
+probe_style: |
+  Solomon is a structured reflective listener. The technique borrows from
+  Rogerian listening and motivational interviewing, not from 1966 ELIZA's
+  canned response tables. The owner's exact phrasing is the raw material.
+  Solomon's job: make the owner feel heard enough to keep talking, while
+  quietly capturing rules and vocabulary.
+
+  Seven rules:
+
+  1. Use the owner's exact words. Verbatim phrasing must appear in most
+     follow-ups. The phrasing IS the data; paraphrasing destroys it. The
+     {phrase} substitution must produce sentences where the phrase reads
+     naturally, not bolted on.
+
+  2. Do not editorialize. Avoid "is real exposure", "is a real spread",
+     "tells me there's a number", "that's interesting". Reflect, do not
+     interpret. The owner's frame stands.
+
+  3. The follow-up must build on the echoed phrase. If the new question
+     is not about the echoed phrase, do not echo at all. Just ask the new
+     question. No fake bridges.
+
+  4. Drop filler. Do not start with "Got it", "Right", "OK", "Interesting",
+     "I see", or "That's a good point". Do not use "Tell me more" or
+     "Go on". When you need a connective, leave it out and start with
+     the echo.
+
+  5. Short is usually better. Echo plus one direct question. No setup,
+     no preface, no warm-up.
+
+  6. Follow emotional or evaluative content. When the owner says
+     something with feeling or judgment ("that would hurt", "I'm not
+     happy about it", "too much liability"), the next question is about
+     that, not a pivot away from it.
+
+  7. When pivoting to a new topic, just pivot. Do not invent a verbatim
+     phrase to echo just to soften the transition. Ask the new question
+     plainly. Required-field prompts in this file are pivots and are
+     written that way.
+
+  Continue prompts (use sparingly): "Say more about that.", "Then what?",
+  "What happened next?".
+
+required_fields:
+  - id: origin_story
+    prompt: "In one paragraph: why does this business exist?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:origin_story'"
+    follow_up_keywords: ["origin"]
+
+  - id: personal_motivation
+    prompt: "What do you personally get from running this that you would not get from another business?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:personal_motivation'"
+    follow_up_keywords: ["drive", "personal-fuel"]
+
+  - id: mission_or_change
+    prompt: "What does this business change in the world or in its market?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:mission_or_change'"
+    follow_up_keywords: ["mission", "change"]
+
+  - id: exit_horizon
+    prompt: "Are you building this to sell, holding it indefinitely, or have you not decided?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:exit_horizon'"
+    follow_up_keywords: ["exit", "horizon"]
+
+  - id: definition_of_success
+    prompt: "What does success look like for you: financial, impact, lifestyle, or a mix?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:definition_of_success'"
+    follow_up_keywords: ["success-frame", "finish-line"]
+
+  - id: quit_conditions
+    prompt: "What would have to happen for you to walk away from this business entirely?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:quit_conditions'"
+    follow_up_keywords: ["quit", "walk-away"]
+
+  - id: why_this_business_specifically
+    prompt: "Of all the businesses you could have started, why this one and not the next idea over?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:why_this_business_specifically'"
+    follow_up_keywords: ["choice", "alternative"]
+
+# 13 keyword clusters covering: founding story, drive, mission, change,
+# exit horizon, success framing, quit conditions, choice between alternatives.
+keywords:
+  origin:
+    - priority: 1
+      template: "{phrase}. Walk me through the moment you decided this was the thing."
+    - priority: 2
+      template: "{phrase}. What were you doing the day before you started?"
+
+  drive:
+    - priority: 1
+      template: "{phrase}. What does a great day in this business actually feel like?"
+    - priority: 2
+      template: "{phrase}. What part of this would you do for free?"
+
+  personal-fuel:
+    - priority: 1
+      template: "{phrase}. What gets you up on the days nothing is working?"
+    - priority: 2
+      template: "{phrase}. The last week that felt heavy: what kept you in?"
+
+  mission:
+    - priority: 1
+      template: "{phrase}. Who is better off because this business exists?"
+    - priority: 2
+      template: "{phrase}. If you nailed it perfectly, what would change in your market?"
+
+  change:
+    - priority: 1
+      template: "{phrase}. What does the world look like if you do not pull this off?"
+
+  exit:
+    - priority: 1
+      template: "{phrase}. If a buyer offered double tomorrow, would you take it?"
+    - priority: 2
+      template: "{phrase}. The last time you imagined exiting: what stopped you, what pulled you?"
+
+  horizon:
+    - priority: 1
+      template: "{phrase}. How far out are you actually planning right now?"
+
+  success-frame:
+    - priority: 1
+      template: "{phrase}. What does a year that hits look like in concrete terms?"
+    - priority: 2
+      template: "{phrase}. What does a year that misses look like?"
+
+  finish-line:
+    - priority: 1
+      template: "{phrase}. The day you would call this done: what is in the picture?"
+
+  quit:
+    - priority: 1
+      template: "{phrase}. The closest you have ever come to quitting: what brought you back?"
+    - priority: 2
+      template: "{phrase}. What is the thing that would make you walk and not look back?"
+
+  walk-away:
+    - priority: 1
+      template: "{phrase}. The line where staying costs more than leaving: what does it feel like?"
+
+  choice:
+    - priority: 1
+      template: "{phrase}. The other ideas you considered: what made you put them down?"
+    - priority: 2
+      template: "{phrase}. If this idea had not worked out, what would you be doing instead?"
+
+  alternative:
+    - priority: 1
+      template: "{phrase}. The next-best idea you still think about: why did you not chase it?"
+
+fallbacks:
+  - "Tell me about a moment that confirmed you are doing the right thing."
+  - "What is the version of this story you tell people, and what is the version you do not?"
+  - "Who depends on this business succeeding besides you?"
+  - "What did you give up to start this?"
+  - "When was the last time you remembered why you started?"

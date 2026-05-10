@@ -1,0 +1,184 @@
+# ideal-outcomes.yaml. Probe library for Onboarding Session 04 (Ideal Outcomes).
+# Schema per probe_library/README.md plus the same two forward-compatible
+# additions (probe_style and required_fields) introduced for Session 0.
+# Existing readers ignore unknown top-level keys.
+#
+# Lower priority number wins. Slot {phrase} is replaced verbatim with the
+# owner's last phrase. See probe_style for how follow-ups are written.
+#
+# Semver bump rules (mirror of README.md):
+#   patch (0.1.0 to 0.1.1) for new probe templates under existing keywords.
+#   minor (0.1.0 to 0.2.0) for new keywords or new required_fields entries.
+#   major (0.1.0 to 1.0.0) for breaking schema changes (field rename, removal).
+
+domain: ideal-outcomes
+version: 0.1.0
+priority: 8   # 1 to 10. Ideal outcomes anchor every prioritization decision,
+              # so they rank high (just below industry, beliefs, why, principles).
+
+probe_style: |
+  Solomon is a structured reflective listener. The technique borrows from
+  Rogerian listening and motivational interviewing, not from 1966 ELIZA's
+  canned response tables. The owner's exact phrasing is the raw material.
+  Solomon's job: make the owner feel heard enough to keep talking, while
+  quietly capturing rules and vocabulary.
+
+  Seven rules:
+
+  1. Use the owner's exact words. Verbatim phrasing must appear in most
+     follow-ups. The phrasing IS the data; paraphrasing destroys it. The
+     {phrase} substitution must produce sentences where the phrase reads
+     naturally, not bolted on.
+
+  2. Do not editorialize. Avoid "is real exposure", "is a real spread",
+     "tells me there's a number", "that's interesting". Reflect, do not
+     interpret. The owner's frame stands.
+
+  3. The follow-up must build on the echoed phrase. If the new question
+     is not about the echoed phrase, do not echo at all. Just ask the new
+     question. No fake bridges.
+
+  4. Drop filler. Do not start with "Got it", "Right", "OK", "Interesting",
+     "I see", or "That's a good point". Do not use "Tell me more" or
+     "Go on". When you need a connective, leave it out and start with
+     the echo.
+
+  5. Short is usually better. Echo plus one direct question. No setup,
+     no preface, no warm-up.
+
+  6. Follow emotional or evaluative content. When the owner says
+     something with feeling or judgment ("that would hurt", "I'm not
+     happy about it", "too much liability"), the next question is about
+     that, not a pivot away from it.
+
+  7. When pivoting to a new topic, just pivot. Do not invent a verbatim
+     phrase to echo just to soften the transition. Ask the new question
+     plainly. Required-field prompts in this file are pivots and are
+     written that way.
+
+  Continue prompts (use sparingly): "Say more about that.", "Then what?",
+  "What happened next?".
+
+required_fields:
+  - id: ideal_revenue_3_year
+    prompt: "In 3 years, what is the revenue number you are aiming at? Range or single is fine."
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:ideal_revenue_3_year'"
+    follow_up_keywords: ["revenue-target", "top-line"]
+
+  - id: ideal_team_size_3_year
+    prompt: "In 3 years, how many people do you want on the team?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:ideal_team_size_3_year'"
+    follow_up_keywords: ["headcount", "team-size"]
+
+  - id: ideal_owner_workload_3_year
+    prompt: "In 3 years, how many hours a week do you want to be working in this business?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:ideal_owner_workload_3_year'"
+    follow_up_keywords: ["owner-hours", "workload"]
+
+  - id: ideal_customer_mix_3_year
+    prompt: "In 3 years, what is the customer mix you want: which segments, what concentration?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:ideal_customer_mix_3_year'"
+    follow_up_keywords: ["customer-mix-target", "segment"]
+
+  - id: ideal_geographic_footprint_3_year
+    prompt: "In 3 years, where do you want to be operating?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:ideal_geographic_footprint_3_year'"
+    follow_up_keywords: ["geography-target", "footprint"]
+
+  - id: one_year_milestone
+    prompt: "Over the next 12 months, what is the single most important thing to hit?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:one_year_milestone'"
+    follow_up_keywords: ["milestone", "one-year"]
+
+  - id: five_year_vision
+    prompt: "Stretch out to 5 years: what does the business look like?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:five_year_vision'"
+    follow_up_keywords: ["five-year", "long-vision"]
+
+# 14 keyword clusters covering: revenue target, team size, owner workload,
+# customer mix, geographic footprint, one-year milestone, five-year vision,
+# plus the depth pairs each required field uses for its one allowed follow-up.
+keywords:
+  revenue-target:
+    - priority: 1
+      template: "{phrase}. What does that number mean for the business in concrete terms?"
+    - priority: 2
+      template: "{phrase}. The path to it: roughly what does it look like?"
+
+  top-line:
+    - priority: 1
+      template: "{phrase}. The last time you pictured that number, did it feel ambitious or comfortable?"
+
+  headcount:
+    - priority: 1
+      template: "{phrase}. Who is the next role you would add?"
+    - priority: 2
+      template: "{phrase}. The size you do not want to cross: where is it?"
+
+  team-size:
+    - priority: 1
+      template: "{phrase}. What does a team that size feel like to manage?"
+
+  owner-hours:
+    - priority: 1
+      template: "{phrase}. The last time you actually worked that few hours: how did the business handle it?"
+    - priority: 2
+      template: "{phrase}. What gets handed off first?"
+
+  workload:
+    - priority: 1
+      template: "{phrase}. The work you would never give up: what is on that list?"
+
+  customer-mix-target:
+    - priority: 1
+      template: "{phrase}. The segment you are trying to add: who would they be?"
+    - priority: 2
+      template: "{phrase}. The segment you are trying to shrink: why?"
+
+  segment:
+    - priority: 1
+      template: "{phrase}. Walk me through one customer in that segment today."
+
+  geography-target:
+    - priority: 1
+      template: "{phrase}. The next territory you would expand into: what would have to be true?"
+    - priority: 2
+      template: "{phrase}. The territory you would never enter: why?"
+
+  footprint:
+    - priority: 1
+      template: "{phrase}. The cost of operating in a new place: what surprises you?"
+
+  milestone:
+    - priority: 1
+      template: "{phrase}. The decision that makes that milestone possible: what is it?"
+    - priority: 2
+      template: "{phrase}. The thing most likely to derail it: what are you watching?"
+
+  one-year:
+    - priority: 1
+      template: "{phrase}. The first 90 days: what has to land?"
+
+  five-year:
+    - priority: 1
+      template: "{phrase}. The version of yourself running it: how is that person different from today?"
+    - priority: 2
+      template: "{phrase}. What does a great week look like in that future?"
+
+  long-vision:
+    - priority: 1
+      template: "{phrase}. If you nailed it: what would people say about the business?"
+
+fallbacks:
+  - "What does the business look like at its best?"
+  - "What does the business look like at its worst, and what keeps you from there?"
+  - "What is one thing you want to keep doing forever, no matter how big you get?"
+  - "What is one thing you want to never do again?"
+  - "Who do you want to be working with in 3 years?"
