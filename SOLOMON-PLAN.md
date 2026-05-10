@@ -61,7 +61,13 @@ conflicts_with      TEXT                    -- JSON list of captured_items.id th
 confidence          TEXT NOT NULL           -- stated | repeated | exemplified
 source_session      TEXT NOT NULL           -- onboarding-NN-domain | mentoring-YYYY-MM-DD
 source_turn         INTEGER NOT NULL        -- nth question of that session
-keywords            TEXT NOT NULL           -- JSON list, lowercase, used for retrieval
+keywords            TEXT NOT NULL           -- JSON list, lowercase, used for retrieval.
+                                            -- Reserved tag conventions added 2026-05-10:
+                                            --   'field:<required_field_id>' marks required-field captures
+                                            --   (used by F1/F4 in the migrated onboarding wrappers).
+                                            --   'hard_rule_promoted' marks Session 05 captured rows that
+                                            --   the owner has elevated to a Stage 4 hard rule (used by
+                                            --   F3 set 4 in solomon-onboarding-05-non-negotiables).
 embedded_at         TEXT                    -- ISO 8601; null = pending Sleep-Cycle Job 11
 created_at          TEXT NOT NULL
 updated_at          TEXT NOT NULL
@@ -121,6 +127,13 @@ keywords:
 fallbacks:
   - "Tell me about the last time pricing came up in a conversation with a customer."
 ```
+
+**Forward-compatible additions to the probe library schema** (introduced 2026-05-10 with the Session 0 to Session 06 migration). Each new probe library YAML may also declare two top-level keys:
+
+- `probe_style`: a literal block scalar containing the seven MIRRORING STYLE rules. Canonical copy ships in `skills/interview/solomon-interview-engine/probe_library/industry.yaml::probe_style`; the human-readable reference lives in `references/eliza-listening.md`. Future probe library files copy this block verbatim so the convention propagates.
+- `required_fields`: a list of must-answer items the session cannot complete without. Each entry has `id` (snake_case), `prompt` (a direct question; pivots, per MIRRORING STYLE rule 7, so no forced echo), `accepts` (the five-element list `["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]`), `satisfied_when` (description of what counts as a captured row), and `follow_up_keywords` (probe library keywords whose match in the answer fires the one allowed follow-up under the 2-turn cap).
+
+Existing readers ignore unknown top-level keys, so these additions are backward compatible. The pre-existing operational probe libraries (`pricing.yaml`, `hiring.yaml`, `customer.yaml`, `ops.yaml`, `vendor.yaml`, `finance.yaml`) do not yet carry these blocks; the foundation-topic probe libraries created during the migration (`industry.yaml`, `belief-system.yaml`, `why.yaml`, `principles.yaml`, `ideal-outcomes.yaml`, `non-negotiables.yaml`, `taxonomy.yaml`) all do.
 
 Each probe library file declares a semver `version` at the top level. Bumps follow standard semver: patch for new templates under existing keywords, minor for new keywords, major for breaking schema changes. `coverage.library_version_seen` is compared against this `version` on launch (§2.1 probe-library version migration). The schema and semver convention are documented in `skills/interview/solomon-interview-engine/probe_library/README.md`.
 
@@ -1059,7 +1072,21 @@ skills/
 └── utilities/  (1) NEW       solomon-redact (global PII pass)
 ```
 
-**How existing onboarding skills change**: each `solomon-onboarding-NN-*` becomes a thin wrapper that sets the active domain and delegates to `solomon-interview-engine`. After every owner turn the wrapper invokes `solomon-extraction` + `solomon-vocabulary-capture` + `solomon-contradiction-check` in parallel; `solomon-coverage-tracker` decides when the session is done. At session close, the wrapper compiles `captured_items` rows into `foundation/NN-*.yaml`.
+**How existing onboarding skills change** (as implemented 2026-05-10 across Sessions 00 to 06). Each `solomon-onboarding-NN-*` is a thin wrapper that runs a five-stage flow:
+
+A. **Setup**. Compute `session_id = onboarding-NN-YYYY-MM-DD` (with `-N` suffix on same-day collision). Open or resume the matching `db.sessions` row. Set `active_domain` to the session's domain. Run the probe-library version migration check.
+
+B. **Discovery**. Delegate per-turn probe selection to `solomon-interview-engine`. After every owner answer, run `solomon-redact`, then `solomon-extraction` + `solomon-vocabulary-capture` in parallel; trigger `solomon-contradiction-check` per inserted captured row. `solomon-coverage-tracker` decides when discovery is saturated (per the §2.1 saturation / diminishing-returns rule).
+
+C. **Required-fields pass**. Run query F1 to list unfilled `required_fields` (loaded from the matching probe library YAML's `required_fields` block). For each, ask the field's `prompt`; if a follow-up keyword matches the owner's answer AND F4 reports turns_on_field < 2, fire one follow-up. Hard cap: 2 turns per field, regardless of how many keywords match. "I don't know", "not applicable", and "decline to answer" each fill the field as a `type=preference` row tagged `field:<id>`.
+
+D. **Closing checkpoint**. Run query F2; present a structured summary grouped by required-field tag versus discovery sub-topic. Owner paths: confirm, correct (writes new captured row with `conflicts_with` referencing the prior id), add, keep talking on a sub-topic (bounded loop, max 3 probes), or abandon. Loop until confirm or abandon. Re-run F1 after every correction so a correction cannot accidentally leave a required field unfilled.
+
+E. **Close**. Set `db.sessions.status='complete'`. Run query F3 to render `foundation/NN-*.yaml` (header comment, `last_updated`, `required_fields` map, `discovery` map keyed by sub-topic, `voice_samples` list).
+
+The four SQL queries (F1 unfilled-required-fields, F2 checkpoint summary, F3 foundation YAML render, F4 turns-on-field) are inline in each migrated SKILL.md.
+
+**Session 05 (non-negotiables) extends Stages D and E** with a hard-rule promotion sub-step. Stage D.2 walks each captured non-negotiable individually; the owner can confirm, edit, or skip promotion to a Stage 4 hard rule. Confirmed rows are tagged `hard_rule_promoted` in their `keywords` array. Stage E's render preserves any existing `rules:` entries in `foundation/05-non-negotiables.yaml` and appends the in-session promotions under the §1 hard-rule schema (`id`, `statement`, `domain`, `condition`, `on_violate`). Skipped rows remain in `captured_items` only and can be promoted later by `solomon-mentoring-session`.
 
 **How `solomon-mentoring-session` changes**: same mechanics. Runs the same 5 interview skills but scopes to recent decision-log entries and surprise/conflict signals from `mentoring_queue` (`WHERE status = 'queued' ORDER BY priority`).
 
