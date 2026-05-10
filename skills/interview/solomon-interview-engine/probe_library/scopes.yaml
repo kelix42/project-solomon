@@ -1,0 +1,148 @@
+# scopes.yaml. Probe library for Onboarding Session 06 (Scopes).
+# Schema per probe_library/README.md plus the same two forward-compatible
+# additions (probe_style and required_fields) introduced for Session 0.
+# Existing readers ignore unknown top-level keys.
+#
+# Scope of this session: capture the starter list of departments, the jobs
+# the owner wants sub-agents to handle, and the named customer segments.
+# Owner autonomy preferences per scope are NOT collected here; they are
+# learned later through the mentoring queue and Sleep-Cycle Job 7 once the
+# owner has real usage context. Per SOLOMON-PLAN.md §2.11, every scope
+# starts at L0; promotion is performance-driven.
+#
+# Lower priority number wins. Slot {phrase} is replaced verbatim with the
+# owner's last phrase. See probe_style for how follow-ups are written.
+#
+# Semver bump rules (mirror of README.md):
+#   patch (0.1.0 to 0.1.1) for new probe templates under existing keywords.
+#   minor (0.1.0 to 0.2.0) for new keywords or new required_fields entries.
+#   major (0.1.0 to 1.0.0) for breaking schema changes (field rename, removal).
+
+domain: scopes
+version: 0.1.0
+priority: 8   # 1 to 10. Scopes seed db.scope_autonomy and the workflow
+              # backlog, so they rank high (just below the foundational
+              # hard-rule library).
+
+probe_style: |
+  Solomon is a structured reflective listener. The technique borrows from
+  Rogerian listening and motivational interviewing, not from 1966 ELIZA's
+  canned response tables. The owner's exact phrasing is the raw material.
+  Solomon's job: make the owner feel heard enough to keep talking, while
+  quietly capturing rules and vocabulary.
+
+  Seven rules:
+
+  1. Use the owner's exact words. Verbatim phrasing must appear in most
+     follow-ups. The phrasing IS the data; paraphrasing destroys it. The
+     {phrase} substitution must produce sentences where the phrase reads
+     naturally, not bolted on.
+
+  2. Do not editorialize. Avoid "is real exposure", "is a real spread",
+     "tells me there's a number", "that's interesting". Reflect, do not
+     interpret. The owner's frame stands.
+
+  3. The follow-up must build on the echoed phrase. If the new question
+     is not about the echoed phrase, do not echo at all. Just ask the new
+     question. No fake bridges.
+
+  4. Drop filler. Do not start with "Got it", "Right", "OK", "Interesting",
+     "I see", or "That's a good point". Do not use "Tell me more" or
+     "Go on". When you need a connective, leave it out and start with
+     the echo.
+
+  5. Short is usually better. Echo plus one direct question. No setup,
+     no preface, no warm-up.
+
+  6. Follow emotional or evaluative content. When the owner says
+     something with feeling or judgment ("that would hurt", "I'm not
+     happy about it", "too much liability"), the next question is about
+     that, not a pivot away from it.
+
+  7. When pivoting to a new topic, just pivot. Do not invent a verbatim
+     phrase to echo just to soften the transition. Ask the new question
+     plainly. Required-field prompts in this file are pivots and are
+     written that way.
+
+  Continue prompts (use sparingly): "Say more about that.", "Then what?",
+  "What happened next?".
+
+required_fields:
+  - id: departments
+    prompt: "What are the main areas of the business you run? Sales, support, ops, anything like that."
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:departments'"
+    follow_up_keywords: ["department-list", "department-overlap"]
+
+  - id: operational_scopes
+    prompt: "For each area, what jobs would you want a sub-agent to handle?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:operational_scopes'. Each row's statement field stores a JSON object {name, department}; department defaults to null if unspecified."
+    follow_up_keywords: ["delegate-job", "repetitive-task", "handoff"]
+
+  - id: customer_segments_named
+    prompt: "Who are your customers? Are there named groups you treat differently?"
+    accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
+    satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:customer_segments_named'"
+    follow_up_keywords: ["segment-name", "segment-treatment"]
+
+# 9 keyword clusters covering: departments and team structure, the job
+# backlog (delegate-job, repetitive-task, handoff, workflow), and named
+# customer segments (segment-name, segment-treatment).
+keywords:
+  department-list:
+    - priority: 1
+      template: "{phrase}. Which area takes the most of your week?"
+    - priority: 2
+      template: "{phrase}. Any area you wish was bigger or smaller than it is?"
+
+  department-overlap:
+    - priority: 1
+      template: "{phrase}. Where do those areas bleed into each other?"
+
+  team-structure:
+    - priority: 1
+      template: "{phrase}. Who runs that area when you are not there?"
+    - priority: 2
+      template: "{phrase}. The role you keep meaning to hire and have not: what is it?"
+
+  delegate-job:
+    - priority: 1
+      template: "{phrase}. The last time you did that yourself: what made you do it instead of handing it off?"
+    - priority: 2
+      template: "{phrase}. What would have to be true for you to hand it off tomorrow?"
+
+  repetitive-task:
+    - priority: 1
+      template: "{phrase}. How many times a week does that come up?"
+    - priority: 2
+      template: "{phrase}. The last time you skipped it: what happened?"
+
+  handoff:
+    - priority: 1
+      template: "{phrase}. The handoff that breaks most often: which one?"
+    - priority: 2
+      template: "{phrase}. The cleanest handoff you have: what makes it work?"
+
+  workflow:
+    - priority: 1
+      template: "{phrase}. Walk me through a typical job from start to finish."
+
+  segment-name:
+    - priority: 1
+      template: "{phrase}. The biggest one by revenue: how would you describe them?"
+    - priority: 2
+      template: "{phrase}. The smallest segment you still serve: why keep them?"
+
+  segment-treatment:
+    - priority: 1
+      template: "{phrase}. Where do you treat them differently from the rest?"
+    - priority: 2
+      template: "{phrase}. The line you would not cross even for a top segment: what is it?"
+
+fallbacks:
+  - "What is a job that comes up every week and steals your time?"
+  - "Who in your business knows how to do that besides you?"
+  - "What is the segment of customers you wish you had more of?"
+  - "What is one job you would happily never do again?"
+  - "If a sub-agent could clear one thing off your plate this month, what would matter most?"

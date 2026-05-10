@@ -129,18 +129,14 @@ SESSION_CONFIGS = {
         ],
     },
     "06": {
-        "domain": "taxonomy",
-        "foundation_path": "foundation/06-taxonomy.yaml",
-        "skill_dir": "solomon-onboarding-06-taxonomy",
-        "yaml_name": "taxonomy.yaml",
+        "domain": "scopes",
+        "foundation_path": "foundation/06-scopes.yaml",
+        "skill_dir": "solomon-onboarding-06-scopes",
+        "yaml_name": "scopes.yaml",
         "required_field_ids": [
+            "departments",
             "operational_scopes",
-            "decision_type_taxonomy",
             "customer_segments_named",
-            "product_or_service_categories",
-            "vendor_or_supplier_categories",
-            "revenue_streams_named",
-            "internal_jargon_terms",
         ],
     },
 }
@@ -334,6 +330,43 @@ def f4_turns_on_field(conn, session_id, field_id):
     return row["turns_on_field"]
 
 
+def f5_write_scope_autonomy_from_session(conn, session_id):
+    """Mirror Session 06 Stage E.3: for each operational_scopes captured row in
+    this session, parse the JSON statement and INSERT OR IGNORE into
+    scope_autonomy with level=0 and notes='source_session: <sid>'. Existing
+    scope rows (already promoted by Sleep-Cycle Job 7) are preserved.
+    Returns the count of rows actually inserted."""
+    rows = conn.execute(
+        """
+        SELECT ci.statement
+        FROM captured_items AS ci, json_each(ci.keywords) AS k
+        WHERE ci.source_session = ?
+          AND k.value = 'field:operational_scopes'
+        """,
+        (session_id,),
+    ).fetchall()
+    written = 0
+    for row in rows:
+        try:
+            scope_data = json.loads(row["statement"])
+            scope_name = scope_data.get("name")
+        except (json.JSONDecodeError, TypeError, AttributeError):
+            continue
+        if not scope_name:
+            continue
+        cursor = conn.execute(
+            """
+            INSERT OR IGNORE INTO scope_autonomy
+              (scope, level, since, last_reeval_at, notes)
+            VALUES (?, 0, ?, ?, ?)
+            """,
+            (scope_name, now_iso(), now_iso(), f"source_session: {session_id}"),
+        )
+        written += cursor.rowcount
+    conn.commit()
+    return written
+
+
 def session_status(conn, session_num, required_field_ids):
     """Mirror the migrated-sessions check in solomon-onboarding-status."""
     prefix = f"onboarding-{session_num}-%"
@@ -451,18 +484,22 @@ def test_required_field_decline(db, session_config):
 
 @pytest.mark.parametrize("session_config", session_param_ids(), indirect=True)
 def test_session_cannot_complete_without_required_fields(db, session_config):
+    """Generalized to any session size: fill all but one required field on a
+    session marked status='complete' and assert the status check still reports
+    in_progress with remaining=1."""
     num = [k for k, v in SESSION_CONFIGS.items() if v is session_config][0]
     sid = f"onboarding-{num}-2026-05-10"
     make_session(db, sid, status="complete", domain=session_config["domain"])
     fids = session_config["required_field_ids"]
-    for i, fid in enumerate(fids[:3]):
+    fill_count = len(fids) - 1
+    for i, fid in enumerate(fids[:fill_count]):
         make_capture(db, sid, source_turn=i + 1,
                      keywords=[f"field:{fid}"],
                      statement=f"answer {fid}",
                      domain=session_config["domain"])
     state, remaining = session_status(db, num, fids)
     assert state == "in_progress"
-    assert remaining == 4
+    assert remaining == 1
 
 
 @pytest.mark.parametrize("session_config", session_param_ids(), indirect=True)
@@ -575,6 +612,8 @@ def test_no_opt_data_writes(session_config):
 
 @pytest.mark.parametrize("session_config", session_param_ids(), indirect=True)
 def test_status_skill_reports_in_progress(db, session_config):
+    """Generalized to any session size: starts at remaining=len(fids), fills
+    all but one, ends at remaining=1."""
     num = [k for k, v in SESSION_CONFIGS.items() if v is session_config][0]
     sid = f"onboarding-{num}-2026-05-10"
     make_session(db, sid, domain=session_config["domain"])
@@ -583,14 +622,15 @@ def test_status_skill_reports_in_progress(db, session_config):
     assert state == "in_progress"
     assert remaining == len(fids)
 
-    for i, fid in enumerate(fids[:4]):
+    fill_count = len(fids) - 1
+    for i, fid in enumerate(fids[:fill_count]):
         make_capture(db, sid, source_turn=i + 1,
                      keywords=[f"field:{fid}"],
                      statement=f"answer {fid}",
                      domain=session_config["domain"])
     state, remaining = session_status(db, num, fids)
     assert state == "in_progress"
-    assert remaining == len(fids) - 4
+    assert remaining == 1
 
 
 @pytest.mark.parametrize("session_config", session_param_ids(), indirect=True)
@@ -874,3 +914,96 @@ def test_session_05_hard_rule_render_preserves_existing_rules(db, tmp_path):
     rule_ids = [r["id"] for r in payload["rules"]]
     assert "01HX0PRIORRULEID" in rule_ids
     assert new_capture_id in rule_ids
+
+
+# ---- Non-parametrized: Session 06 scope_autonomy write ----
+
+def test_session_06_writes_scope_autonomy(db):
+    """Session 06 Stage E.3: for each operational_scopes captured row, parse
+    the JSON statement {name, department} and INSERT OR IGNORE into
+    db.scope_autonomy with level=0 and notes='source_session: <sid>'.
+
+    Validates four properties:
+    1. New scopes are inserted at level=0 with source_session in notes.
+    2. department-null scopes are still written (department lives in
+       captured_items only, not in scope_autonomy).
+    3. Pre-existing scope_autonomy rows (already promoted by Sleep-Cycle
+       Job 7) are preserved by INSERT OR IGNORE.
+    4. Re-running the write is idempotent (no duplicate rows).
+    """
+    sid = "onboarding-06-2026-05-10"
+    make_session(db, sid, domain="scopes")
+
+    # Three operational_scopes captures, statement is JSON {name, department}.
+    make_capture(
+        db, sid, source_turn=1,
+        keywords=["field:operational_scopes"],
+        statement=json.dumps({
+            "name": "respond_to_inbound_lead",
+            "department": "Sales",
+        }),
+        domain="scopes",
+    )
+    make_capture(
+        db, sid, source_turn=2,
+        keywords=["field:operational_scopes"],
+        statement=json.dumps({
+            "name": "send_invoice",
+            "department": "Finance",
+        }),
+        domain="scopes",
+    )
+    make_capture(
+        db, sid, source_turn=3,
+        keywords=["field:operational_scopes"],
+        statement=json.dumps({
+            "name": "draft_proposal",
+            "department": None,
+        }),
+        domain="scopes",
+    )
+
+    # Pre-existing scope_autonomy row (already promoted by Sleep-Cycle Job 7).
+    db.execute(
+        """
+        INSERT INTO scope_autonomy (scope, level, since, last_reeval_at, notes)
+        VALUES (?, 2, ?, ?, ?)
+        """,
+        ("respond_to_inbound_lead", now_iso(), now_iso(), "promoted by Job 7"),
+    )
+    db.commit()
+
+    # First run: send_invoice and draft_proposal are new; the other is preserved.
+    written = f5_write_scope_autonomy_from_session(db, sid)
+    assert written == 2
+
+    rows = db.execute(
+        "SELECT scope, level, notes FROM scope_autonomy ORDER BY scope"
+    ).fetchall()
+    by_scope = {r["scope"]: r for r in rows}
+
+    assert set(by_scope.keys()) == {
+        "respond_to_inbound_lead",
+        "send_invoice",
+        "draft_proposal",
+    }
+
+    # Property 3: pre-existing row preserved.
+    assert by_scope["respond_to_inbound_lead"]["level"] == 2
+    assert by_scope["respond_to_inbound_lead"]["notes"] == "promoted by Job 7"
+
+    # Property 1: new scopes at level=0 with source_session in notes.
+    assert by_scope["send_invoice"]["level"] == 0
+    assert sid in by_scope["send_invoice"]["notes"]
+
+    # Property 2: department-null scope still written (department not in schema).
+    assert by_scope["draft_proposal"]["level"] == 0
+    assert sid in by_scope["draft_proposal"]["notes"]
+
+    # Property 4: idempotent re-run.
+    written_again = f5_write_scope_autonomy_from_session(db, sid)
+    assert written_again == 0
+    final_count = db.execute(
+        "SELECT COUNT(*) AS n FROM scope_autonomy"
+    ).fetchone()["n"]
+    assert final_count == 3

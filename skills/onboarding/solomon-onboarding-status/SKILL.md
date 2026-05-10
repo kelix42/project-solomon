@@ -42,7 +42,7 @@ Solomon Onboarding (Status)
 [ ] / [x] / [in progress (N remaining)] Session 3: Principles
 [ ] / [x] / [in progress (N remaining)] Session 4: Ideal Outcomes
 [ ] / [x] / [in progress (N remaining)] Session 5: Non-Negotiables
-[ ] / [x] / [in progress (N remaining)] Session 6: Taxonomy
+[ ] / [x] / [in progress (N remaining)] Session 6: Scopes
 
 X/7 complete
 

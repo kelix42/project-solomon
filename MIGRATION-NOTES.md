@@ -24,7 +24,7 @@ This file records out-of-scope inconsistencies surfaced during the Session 0 mig
    - `skills/onboarding/solomon-onboarding-04-ideal-outcomes/SKILL.md`
    - `skills/onboarding/solomon-onboarding-05-non-negotiables/SKILL.md`
    - `skills/onboarding/solomon-onboarding-06-taxonomy/SKILL.md`
-   - Each needs Style B frontmatter, the five-stage flow, and a matching probe library YAML (`belief-system.yaml`, `why.yaml`, `principles.yaml`, `ideal-outcomes.yaml`, `non-negotiables.yaml`, `taxonomy.yaml`) carrying its own `required_fields` and `probe_style` blocks.
+   - Each needs Style B frontmatter, the five-stage flow, and a matching probe library YAML (`belief-system.yaml`, `why.yaml`, `principles.yaml`, `ideal-outcomes.yaml`, `non-negotiables.yaml`, `scopes.yaml`) carrying its own `required_fields` and `probe_style` blocks.
    - Once Sessions 1 to 6 migrate, the legacy file-existence path in `solomon-onboarding-status` should be removed entirely.
 
 2. **`solomon-mentoring-session` (Style A)** writes to `/opt/data/solomon/mentoring/` and uses static question lists. Needs migration to delegate to `solomon-interview-engine`, write to `db.captured_items`, and read the mentoring queue ordered by priority per SOLOMON-PLAN.md §2.7.
@@ -62,3 +62,29 @@ Per the user's directive to reflect the modern reflective listening recommendati
 - `skills/onboarding/solomon-onboarding-00-industry/SKILL.md` (skill body has a "Listening style" section pointing to both)
 
 Future migration slices should add the same `probe_style` block to every new probe library YAML and update the corresponding wrapper SKILL.md to point at `references/eliza-listening.md`.
+
+## 2026-05-10. Session 06 refactor: Taxonomy to Scopes
+
+Reframed the final onboarding session from a 7-required-field taxonomy elicitation to a 3-required-field scopes elicitation. The five dropped fields (decision_type_taxonomy, product_or_service_categories, vendor_or_supplier_categories, revenue_streams_named, internal_jargon_terms) are captured passively by `solomon-vocabulary-capture`, the listening agent, and corpus entity allowlisting.
+
+What survives:
+
+| field | shape | downstream consumer |
+|---|---|---|
+| `departments` | list of department names | `captured_items` only (no scope_autonomy column for department) |
+| `operational_scopes` | each captured row's `statement` is JSON `{name, department}` | `captured_items` plus `db.scope_autonomy` (one INSERT OR IGNORE row per scope at level=0) |
+| `customer_segments_named` | list of named segments | `captured_items` plus retrieval Lane 3 entity anchors |
+
+Files renamed:
+
+- `skills/onboarding/solomon-onboarding-06-taxonomy/` to `skills/onboarding/solomon-onboarding-06-scopes/`
+- `skills/interview/solomon-interview-engine/probe_library/taxonomy.yaml` to `scopes.yaml` (full content rewrite, not a simple rename)
+- `foundation/06-taxonomy.yaml` to `foundation/06-scopes.yaml` (header retitled)
+
+Stage E.3 is a structural addition: Session 06 is the only onboarding session that writes to `db.scope_autonomy`. The write is `INSERT OR IGNORE INTO scope_autonomy (scope, level, since, last_reeval_at, notes) VALUES (?, 0, ?, ?, 'source_session: <sid>')` per captured scope. Existing rows whose `level` has already been promoted by Sleep-Cycle Job 7 are preserved. Per SOLOMON-PLAN.md §2.11, every scope starts at L0; promotion is performance-driven, not chosen at onboarding. Owner autonomy preferences per scope are deliberately deferred to mentoring and Job 7.
+
+Tests updated:
+
+- `SESSION_CONFIGS["06"]` rewritten (domain, foundation_path, skill_dir, yaml_name, required_field_ids).
+- `test_session_cannot_complete_without_required_fields` and `test_status_skill_reports_in_progress` generalized from hard-coded counts to `len(fids) - 1` so they handle any session with at least 2 required_fields.
+- New non-parametrized `test_session_06_writes_scope_autonomy` validates the four properties of Stage E.3: new scopes at level=0, department-null scopes still written, existing rows preserved by INSERT OR IGNORE, idempotent re-runs.
