@@ -10,6 +10,18 @@
 # owner has real usage context. Per SOLOMON-PLAN.md §2.11, every scope
 # starts at L0; promotion is performance-driven.
 #
+# 0.2.0 (2026-05-10): rewrote all discovery probe templates from
+# role-shaped to task-shaped. Operational scopes are jobs a sub-agent
+# could take over, so probes now ask about the work itself: what tasks
+# happen, how often, what triggers them, what a good output looks like,
+# what is repetitive, what gets rushed, what gets dropped. Three
+# role-shaped clusters were dropped (team-structure, department-overlap,
+# the people-handoff framing) and three task-shaped clusters were added
+# (manual-step, rushed-task, dropped-task). department-list became
+# area-list; handoff became handoff-artifact. follow_up_keywords on
+# departments and operational_scopes updated to match. One fallback
+# rewritten from role-shaped to task-shaped.
+#
 # Lower priority number wins. Slot {phrase} is replaced verbatim with the
 # owner's last phrase. See probe_style for how follow-ups are written.
 #
@@ -19,7 +31,7 @@
 #   major (0.1.0 to 1.0.0) for breaking schema changes (field rename, removal).
 
 domain: scopes
-version: 0.1.0
+version: 0.2.0
 priority: 8   # 1 to 10. Scopes seed db.scope_autonomy and the workflow
               # backlog, so they rank high (just below the foundational
               # hard-rule library).
@@ -72,13 +84,13 @@ required_fields:
     prompt: "What are the main areas of the business you run? Sales, support, ops, anything like that."
     accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
     satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:departments'"
-    follow_up_keywords: ["department-list", "department-overlap"]
+    follow_up_keywords: ["area-list", "area-work"]
 
   - id: operational_scopes
     prompt: "For each area, what jobs would you want a sub-agent to handle?"
     accepts: ["free_text", "i_dont_know", "not_applicable", "decline_to_answer"]
     satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:operational_scopes'. Each row's statement field stores a JSON object {name, department}; department defaults to null if unspecified."
-    follow_up_keywords: ["delegate-job", "repetitive-task", "handoff"]
+    follow_up_keywords: ["delegate-job", "repetitive-task", "manual-step", "handoff-artifact"]
 
   - id: customer_segments_named
     prompt: "Who are your customers? Are there named groups you treat differently?"
@@ -86,31 +98,29 @@ required_fields:
     satisfied_when: "captured_items row exists with source_session=this AND keywords contains 'field:customer_segments_named'"
     follow_up_keywords: ["segment-name", "segment-treatment"]
 
-# 9 keyword clusters covering: departments and team structure, the job
-# backlog (delegate-job, repetitive-task, handoff, workflow), and named
-# customer segments (segment-name, segment-treatment).
+# 10 keyword clusters, all task-shaped (the work itself, not who does it).
+# Two cover departments as areas of work (area-list, area-work). Six cover
+# scope candidates (delegate-job, repetitive-task, manual-step, rushed-task,
+# dropped-task, handoff-artifact). Two cover customer segments (segment-name,
+# segment-treatment).
 keywords:
-  department-list:
+  area-list:
     - priority: 1
-      template: "{phrase}. Which area takes the most of your week?"
+      template: "{phrase}. What kind of work happens there in a typical week?"
     - priority: 2
-      template: "{phrase}. Any area you wish was bigger or smaller than it is?"
+      template: "{phrase}. What gets done there that nowhere else covers?"
 
-  department-overlap:
+  area-work:
     - priority: 1
-      template: "{phrase}. Where do those areas bleed into each other?"
-
-  team-structure:
-    - priority: 1
-      template: "{phrase}. Who runs that area when you are not there?"
+      template: "{phrase}. The most common job in that area: what does it look like start to finish?"
     - priority: 2
-      template: "{phrase}. The role you keep meaning to hire and have not: what is it?"
+      template: "{phrase}. The kind of work in that area you wish you saw less of?"
 
   delegate-job:
     - priority: 1
       template: "{phrase}. The last time you did that yourself: what made you do it instead of handing it off?"
     - priority: 2
-      template: "{phrase}. What would have to be true for you to hand it off tomorrow?"
+      template: "{phrase}. What would have to be true for a sub-agent to do it tomorrow?"
 
   repetitive-task:
     - priority: 1
@@ -118,15 +128,29 @@ keywords:
     - priority: 2
       template: "{phrase}. The last time you skipped it: what happened?"
 
-  handoff:
+  manual-step:
     - priority: 1
-      template: "{phrase}. The handoff that breaks most often: which one?"
+      template: "{phrase}. The part of it that is still hand-typed every time: what is it?"
     - priority: 2
-      template: "{phrase}. The cleanest handoff you have: what makes it work?"
+      template: "{phrase}. What would a templated version of that look like?"
 
-  workflow:
+  rushed-task:
     - priority: 1
-      template: "{phrase}. Walk me through a typical job from start to finish."
+      template: "{phrase}. The job that always gets done badly because of time: which one?"
+    - priority: 2
+      template: "{phrase}. What does a not-rushed version of that look like?"
+
+  dropped-task:
+    - priority: 1
+      template: "{phrase}. The kind of work that falls through the cracks most: what is it?"
+    - priority: 2
+      template: "{phrase}. The last one you remembered too late: what was it?"
+
+  handoff-artifact:
+    - priority: 1
+      template: "{phrase}. What is the actual artifact that gets passed: a doc, a number, a status?"
+    - priority: 2
+      template: "{phrase}. What triggers it being ready, and what does ready look like?"
 
   segment-name:
     - priority: 1
@@ -142,7 +166,7 @@ keywords:
 
 fallbacks:
   - "What is a job that comes up every week and steals your time?"
-  - "Who in your business knows how to do that besides you?"
+  - "What is the kind of work that always lands on your desk first?"
   - "What is the segment of customers you wish you had more of?"
   - "What is one job you would happily never do again?"
   - "If a sub-agent could clear one thing off your plate this month, what would matter most?"
